@@ -22,7 +22,7 @@ import static org.example.ImageProcess.preprocessImage;
 public class McDonaldsSurveyAutomation {
     static {
         try {
-            // actual path of OpenCV library
+            // Actual path of OpenCV library
             System.load("C:\\Users\\Suraj\\Downloads\\opencv\\build\\java\\x64\\opencv_java451.dll");
         } catch (UnsatisfiedLinkError e) {
             System.err.println("Failed to load OpenCV native library: " + e.getMessage());
@@ -34,7 +34,16 @@ public class McDonaldsSurveyAutomation {
     static final Logger logger = Logger.getLogger(McDonaldsSurveyAutomation.class.getName());
 
     public static void main(String[] args) {
-        String imagePath = "C:\\Users\\Suraj\\Downloads\\IMG_9224.jpeg"; // image path
+        if (args.length < 1) {
+            System.err.println("No file path provided");
+            return;
+        }
+
+        // Get the file path from the command-line argument
+        String imagePath = args[0];
+        logger.info("Received file path: " + imagePath);
+
+        // Rest of your existing logic
         logger.info("Starting image preprocessing...");
         String preprocessedImagePath = preprocessImage(imagePath);
         if (preprocessedImagePath == null) {
@@ -49,6 +58,11 @@ public class McDonaldsSurveyAutomation {
             logger.severe("Failed to extract a valid survey code from the image.");
             return;
         }
+
+        // Output the extracted validation code
+        logger.info("Extracted Validation Code: " + surveyCode);
+        System.out.println("Validation Code: " + surveyCode);
+
 
         // Web automation with Selenium
         System.setProperty("webdriver.chrome.driver", "C:\\Users\\Suraj\\Downloads\\chromedriver-win64 (2)\\chromedriver-win64\\chromedriver.exe");        ChromeOptions options = new ChromeOptions();
@@ -117,11 +131,21 @@ public class McDonaldsSurveyAutomation {
                 Thread.sleep(500); // Reduced sleep for faster navigation
             }
 
-            logger.info("Survey completed!");
+            try {
+                // Wait for the page content to be visible
+                WebElement contentElement = wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("content"))); // Adjust based on your element
+                String pageText = contentElement.getText();
 
+                // Extract 7-digit code using regex
+                String validationCode = pageText.replaceAll("[^0-9]", "").substring(0, 7);
+                logger.info("Extracted Validation Code: " + validationCode);
+                System.out.println("Validation Code: " + validationCode);
+
+            } catch (Exception e) {
+                logger.log(Level.SEVERE, "Error extracting validation code: " + e.getMessage(), e);
+            }
         } catch (Exception e) {
             logger.log(Level.SEVERE, "Error during form submission: " + e.getMessage(), e);
         }
     }
-
 }
